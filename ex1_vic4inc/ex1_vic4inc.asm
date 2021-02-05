@@ -17,9 +17,11 @@ Entry:
 		//Disable CIA and IRQ interrupts
 		lda #$7f
 		sta $dc0d 
-		sta $dd0d 
+		sta $dd0d
+		lda $dc0d //cancel all CIA-IRQs in queue/unprocessed
+		lda $dd0d //cancel all CIA-IRQs in queue/unprocessed 
 
-		lda #$00
+		lda #$00  //Disable all interupts
 		sta $d01a //Interupt control register
 
 		cli
