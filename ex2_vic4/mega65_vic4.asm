@@ -59,13 +59,16 @@ Entry:
 		sta $d054
 		
 		lda #$00
-		sta $d020 //set back color to black
-
+		sta $d021 //set back color to black
 
 
 		//4. Put color pallete into Color Registers
 		jsr fill_pallete_regs
 
+		//5. Main Loop change border color
+!:
+ 		inc $d020
+	  	jmp !-
 
 		*=$2800 // screen data is 16 bit
 		.for (var y=0; y<25; y++) {
@@ -76,10 +79,6 @@ Entry:
 			}
 			
 		}
-
-!:
- 		inc $d021
-	  	jmp !-
 
 fill_pallete_regs:
 {
@@ -92,7 +91,7 @@ fill_pallete_regs:
 		lda pallete_b,x
 		sta $d300,x
 		inx
-		cmp #pallete_g-pallete_r
+		cpx #pallete_g-pallete_r
 		bne !-
 		rts 
 }

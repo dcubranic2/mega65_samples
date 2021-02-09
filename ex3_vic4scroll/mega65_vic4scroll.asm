@@ -72,13 +72,30 @@ Entry:
 		sta $d054
 		
 		lda #$00
-		sta $d020 //set back color to black
+		sta $d021 //set screen color to black
 
 
 
 		//4. Put color pallete into Color Registers
 		jsr fill_pallete_regs
 
+		//5. Main Loop
+		!:
+
+		lda $d012
+		cmp #250
+		beq !trottle+
+		bne !-
+!trottle:
+		clc
+		lda $d060
+		adc #80
+		sta $d060
+		bcs !in+
+		jmp !end+
+!in:
+		inc $d061
+!end:	jmp !-
 
 		*=$2800 // screen data is 16 bit
 		.for (var y=0; y<25; y++) {
@@ -92,13 +109,7 @@ Entry:
 
 		cli //uncomment for inerrupts
 
-!:
- 		inc $d021
 
-		lda $d060
-		adc 40
-		sta $d060
-	  	jmp !-
 
 actor_animate_isr:
         dec $d019        // acknowledge IRQ 
@@ -123,7 +134,7 @@ fill_pallete_regs:
 		lda pallete_b,x
 		sta $d300,x
 		inx
-		cmp #pallete_g-pallete_r
+		cpx #pallete_g-pallete_r
 		bne !-
 		rts 
 }
