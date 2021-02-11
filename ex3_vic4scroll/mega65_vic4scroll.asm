@@ -80,13 +80,27 @@ Entry:
 		jsr fill_pallete_regs
 
 		//5. Main Loop
-		!:
-
+!start:	ldx #255
+		lda $d061
+		cmp #$2f
+		bne !+
+		lda $d060
+		cmp #$d0
+		bne !+
+!reset:
+		lda #0
+		sta $d060
+		lda #$28
+		sta $d061
+!:
 		lda $d012
 		cmp #250
-		beq !trottle+
+		beq !raster+
 		bne !-
-!trottle:
+!raster:
+		dex
+		cpx #0
+		bne !-
 		clc
 		lda $d060
 		adc #80
@@ -95,7 +109,7 @@ Entry:
 		jmp !end+
 !in:
 		inc $d061
-!end:	jmp !-
+!end:	jmp !start-
 
 		*=$2800 // screen data is 16 bit
 		.for (var y=0; y<25; y++) {
