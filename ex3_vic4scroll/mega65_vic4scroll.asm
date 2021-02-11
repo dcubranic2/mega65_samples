@@ -121,6 +121,16 @@ Entry:
 			
 		}
 
+		*=$2fd0 // screen data is 16 bit
+		.for (var y=0; y<25; y++) {
+			.for(var x=0;x<40;x++)
+			{
+				.word (y*40+x)+$1000 // pointers to FCM characters, warning heighest 3 bits (13-15 bits) in 2 byte pointer is for trimming
+									 // so valid range for pointer values is 0x1000-0x1FFFF without trimming
+			}
+			
+		}
+
 		cli //uncomment for inerrupts
 
 
