@@ -90,7 +90,7 @@
 }
 
 
-.macro VIC4_SetColorRamLocation(addr) {
+.macro VIC4_SetColorRamOffset(addr) {
 	lda #[addr & $ff]
 	sta $d064
 	lda #[[addr & $ff00]>>8]

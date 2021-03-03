@@ -27,9 +27,9 @@ Entry:
         sta jiffys
         lda 789
         sta jiffys+1
-        lda #<actor_animate_isr
+        lda #<mega_isr
         sta 788
-        lda #>actor_animate_isr
+        lda #>mega_isr
         sta 789
 
         lda #250    // trigger first interrupt at row 250
@@ -37,7 +37,7 @@ Entry:
         lda $d011   // Bit#0 of $d011 is basically... 
         and #$7f    // ...the 9th Bit for $d012 
         sta $d011   // we need to make sure it is set to zero  
-
+	
 		//VIC IV Nyble Color Mode (640x400x16) Checker Pattern or Prince image
 		//Does not work in XEMU because of prg size > 64K
 		//Test on real Mega65 Hardware
@@ -50,20 +50,18 @@ Entry:
 		ora #$10 
 		sta $D016
 
-		//Turn On H640 mode or 80 characher mode 
+		//Turn On H640 mode or 80 characher mode and V400 mode
 		lda $d031
-		and #%11111111
+		ora #%10001000
 		sta $d031
 
 		//2. Put Character data into memory
 		VIC4_SetCharLocation($040000);
 
-		//3. Put Pallete data into memory
-
 		//3. Set video display to Character data & Color Data
 		VIC4_SetScreenLocation($00002800);
 
-		VIC4_SetColorRamLocation($5000);
+		jsr triggerdma // for color map
 
 		//Logical characters per row (number of memory locations per row) is 80
 		lda #$50
@@ -76,18 +74,17 @@ Entry:
 		sta $d05e
 
 		lda $d054
-		ora #%00000001 // set FCLRHI=1 and CHR16=1
+		ora #%0000101 // set FCLRHI=1 and CHR16=1
 		sta $d054
 		
 		lda #$00
 		sta $d021 //set screen color to black
 
-
-
 		//4. Put color pallete into Color Registers
 		jsr fill_pallete_regs
 
 		//5. Main Loop
+		cli
 
 !:
 		jmp!-
@@ -143,17 +140,11 @@ Entry:
 			
 		// }
 
-		cli //uncomment for inerrupts
 
-
-
-actor_animate_isr:
+mega_isr:
         dec $d019        // acknowledge IRQ 
                          // kad se uđe u ISR već je I flag na 1 --> interrupt disable
-		//brk
-		//lda $d060
-		//adc 40
-		//sta $d060
+
         jmp $EA81    // obavezno pozvati izgleda da ovisi o SYSTEM TIMER CIA postavkama
         // da li će jump biti na $EA81 ili $EA31
         //rti ili $EA81 za kraj RTI rutine PLA TAY PLA TAX PLA RTI ili $EA31 za početak
@@ -175,7 +166,31 @@ fill_pallete_regs:
 		rts 
 }
 
+triggerdma:
+{
+		lda #0 // make sure F018 list format
+		sta $d703
+		lda #0 // dma list bank
+		sta $d702
+		lda #>rasterdmalist
+		sta $d701
+		lda #<rasterdmalist
+		sta $d705
+		rts
+}
+
 jiffys:         .word 0
+
+rasterdmalist:
+.byte $81,$ff,$00
+.byte $00 // COPY
+.word 4000 // DMA transfer is 4000 bytes long
+.word color_ram // source address
+.byte $00 // source bank
+.word $0000 // destination address
+.byte $08 // destination bank + HOLD
+// unused modulo field
+.word $0000
 //#import "mega65_checker.asm"
 #import "mega65_prince.asm"
 
